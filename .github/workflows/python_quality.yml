@@ -30,4 +30,4 @@ jobs:
         run: pylint $(git ls-files '*.py')
 
       - name: Run SQL quality checks (sqlfluff)
-        run: sqlfluff $(git ls-files '*.py')
+        run: sqlfluff $(git ls-files '*.sql')

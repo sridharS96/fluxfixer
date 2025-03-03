@@ -12,7 +12,8 @@ WHERE CustomerName = New York;
 
 -- Mistake 3: Using a reserved keyword as a column name (should be something like "OrderDate", not "Date")
 SELECT Date, ProductID
-FROM Orders;
+FROM Orders
+GROUP BY Orders;
 
 -- Mistake 4: Incorrect syntax for a WHERE clause (should be "WHERE Price > 50", not "WHERE Price MORE THAN 50")
 SELECT ProductName
