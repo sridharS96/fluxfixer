@@ -1,6 +1,6 @@
 import csv
-import mysql.connector
 import os
+import mysql.connector
 
 def load_csv_to_mysql(csv_filename, db_config):
     """Loads data from a CSV file into a MySQL table."""
