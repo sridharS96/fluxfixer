@@ -1,4 +1,4 @@
-name: Lint SQL Files
+name: Lint Check Files
 
 on:
   push:
@@ -26,27 +26,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install sqlfluff
 
-    - name: Run SQLFluff on specific folder
+    - name: Run Python script
       run: |
-        echo "--- SQLFluff Output for SQL_Scripts ---" >> quality_check_output.txt
-        git ls-files 'SQL_Scripts/*.sql' >> quality_check_output.txt
-        sqlfluff lint $(git ls-files 'SQL_Scripts/*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
-        if [ $? -ne 0 ]; then
-          echo "SQLFluff linting failed for SQL_Scripts. Check quality_check_output.txt for details."
-          cat quality_check_output.txt
-        fi
-      continue-on-error: true
-      shell: bash
-
-    - name: Run SQLFluff on all SQL files
-      run: |
-        echo "--- SQLFluff Output for All SQL Files ---" >> quality_check_output.txt
-        git ls-files '*.sql' >> quality_check_output.txt
-        sqlfluff lint $(git ls-files '*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
-        if [ $? -ne 0 ]; then
-          echo "SQLFluff linting failed for all SQL files. Check quality_check_output.txt for details."
-          cat quality_check_output.txt
-        fi
+        echo "--- Running Python script for SQL checkks ---" >> quality_check_output.txt
+        python code_fix_run.py >> quality_check_output.txt
+        
       continue-on-error: true
       shell: bash
 
