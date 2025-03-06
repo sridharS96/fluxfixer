@@ -38,7 +38,7 @@ jobs:
       - name: Run SQL quality checks (sqlfluff) and save output
         run: |
           echo "--- SQLFluff Output ---" >> quality_check_output.txt
-          sqlfluff lint $(git ls-files '*.sql') >> quality_check_output.txt 2>&1
+          sqlfluff lint $(git ls-files '*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
           echo "--- End SQLFluff Output ---" >> quality_check_output.txt
 
       - name: Upload Output File as Artifact (Optional)
