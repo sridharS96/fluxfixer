@@ -30,7 +30,7 @@ jobs:
     - name: Run Python script
       run: |
         echo "--- Running Python script for SQL checkks ---" >> quality_check_output.txt
-        python py_Scripts/code_run_args.py >> quality_check_output.txt
+        python py_Scripts/code_run_arg.py >> quality_check_output.txt
       
       continue-on-error: true
       shell: bash
