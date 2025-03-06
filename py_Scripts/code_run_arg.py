@@ -37,8 +37,8 @@ def process_sql_files(folder_path, script_path,error_file,fixed_path):
         logger.error(f"An unexpected error occurred: {e}")
 
 # Example usage:
-folder = r"C:\Users\ssk38\Downloads\pydir\SQl_full_test\SQL" # Replace with your folder path
-script_path = r"C:\Users\ssk38\Downloads\pydir\code_run_arg.py" # Replace with your script path
-error_file = r"C:\Users\ssk38\Downloads\pydir\SQl_full_test\SQL\errors" # Replace with your error path 
-fixed_file = r"C:\Users\ssk38\Downloads\pydir\SQl_full_test\SQL\fixed" # Replace with your fixed path
+folder = r"SQL_Scripts\SQL" # Replace with your folder path
+script_path = r"py_Scripts\code_run_arg.py" # Replace with your script path
+error_file = r"SQL_Scripts\SQL\errors" # Replace with your error path 
+fixed_file = r"SQL_Scripts\SQL\fixed" # Replace with your fixed path
 process_sql_files(folder, script_path,error_file,fixed_file)
