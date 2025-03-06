@@ -24,12 +24,30 @@ jobs:
           pip install flake8 pylint # Example quality tools. Add your specific tools here.
           pip install mysql-connector-python
           pip install sqlfluff
-          
-      - name: Run quality checks (Flake8)
-        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
-      - name: Run Python quality checks (Pylint)
-        run: pylint $(git ls-files '*.py')
+      - name: Create Output File
+        run: touch quality_check_output.txt  # Create an empty file to store output
 
-      - name: Run SQL quality checks (sqlfluff)
-        run: sqlfluff $(git ls-files '*.sql')
+      - name: Run quality checks (Flake8) and save output
+        run: |
+          echo "--- Flake8 Output ---" >> quality_check_output.txt
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics >> quality_check_output.txt 2>&1
+          echo "--- End Flake8 Output ---" >> quality_check_output.txt
+
+      - name: Run Python quality checks (Pylint) and save output
+        run: |
+          echo "--- Pylint Output ---" >> quality_check_output.txt
+          pylint $(git ls-files '*.py') >> quality_check_output.txt 2>&1
+          echo "--- End Pylint Output ---" >> quality_check_output.txt
+
+      - name: Run SQL quality checks (sqlfluff) and save output
+        run: |
+          echo "--- SQLFluff Output ---" >> quality_check_output.txt
+          sqlfluff $(git ls-files '*.sql') >> quality_check_output.txt 2>&1
+          echo "--- End SQLFluff Output ---" >> quality_check_output.txt
+
+      - name: Upload Output File as Artifact (Optional)
+        uses: actions/upload-artifact@v3
+        with:
+          name: quality-check-report
+          path: quality_check_output.txt
