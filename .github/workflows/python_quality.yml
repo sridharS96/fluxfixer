@@ -47,7 +47,7 @@ jobs:
           echo "--- End SQLFluff Output ---" >> quality_check_output.txt
 
       - name: Upload Output File as Artifact (Optional)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: quality-check-report
           path: quality_check_output.txt
