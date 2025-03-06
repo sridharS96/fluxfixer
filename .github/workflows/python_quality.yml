@@ -1,57 +1,49 @@
-name: Code Quality Check
+name: Lint SQL Files
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
-      - main  # Or your desired branch
+      - main
 
 jobs:
-  quality_check:
+  lint-sql:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x' # Or your desired Python version
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 pylint # Example quality tools. Add your specific tools here.
-          pip install mysql-connector-python
-          pip install sqlfluff
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install sqlfluff
 
-      - name: Create Output File
-        run: touch quality_check_output.txt  # Create an empty file to store output
+    - name: Run SQLFluff on specific folder
+      run: |
+        echo "--- SQLFluff Output for SQL_Scripts ---" >> quality_check_output.txt
+        sqlfluff lint $(git ls-files 'SQL_Scripts/*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
+        if [ $? -ne 0 ]; then
+          echo "SQLFluff linting failed for SQL_Scripts. Check quality_check_output.txt for details."
+          exit 1
+        fi
 
-      - name: Run quality checks (Flake8) and save output
-        run: |
-          echo "--- Flake8 Output ---" >> quality_check_output.txt
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics >> quality_check_output.txt 2>&1
-          echo "--- End Flake8 Output ---" >> quality_check_output.txt
+    - name: Run SQLFluff on all SQL files
+      run: |
+        echo "--- SQLFluff Output for All SQL Files ---" >> quality_check_output.txt
+        sqlfluff lint $(git ls-files '*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
+        if [ $? -ne 0 ]; then
+          echo "SQLFluff linting failed for all SQL files. Check quality_check_output.txt for details."
+          exit 1
+        fi
+      shell: bash
 
-
-      - name: Run SQL quality checks (sqlfluff) and save output
-        run: |
-          echo "--- SQLFluff Output ---" >> quality_check_output.txt
-          sqlfluff lint $(git ls-files 'SQL_Scripts\*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
-          echo "--- End SQLFluff Output ---" >> quality_check_output.txt
-          echo "--- SQLFluff Output ---" >> quality_check_output.txt
-          sqlfluff lint $(git ls-files '*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
-          if [ $? -ne 0 ]; then
-              echo "SQLFluff linting failed. Check quality_check_output.txt for details."
-              exit 1
-          else
-          echo "SQLFluff linting completed successfully."
-          fi
-          echo "--- End SQLFluff Output ---" >> 
-
-      - name: Upload Output File as Artifact (Optional)
-        uses: actions/upload-artifact@v4
-        with:
-          name: quality-check-report
-          path: quality_check_output.txt
+    - name: Display output
+      run: cat quality_check_output.txt
