@@ -40,6 +40,15 @@ jobs:
           echo "--- SQLFluff Output ---" >> quality_check_output.txt
           sqlfluff lint $(git ls-files 'SQL_Scripts\*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
           echo "--- End SQLFluff Output ---" >> quality_check_output.txt
+          echo "--- SQLFluff Output ---" >> quality_check_output.txt
+          sqlfluff lint $(git ls-files '*.sql') --dialect=bigquery >> quality_check_output.txt 2>&1
+          if [ $? -ne 0 ]; then
+              echo "SQLFluff linting failed. Check quality_check_output.txt for details."
+              exit 1
+          else
+          echo "SQLFluff linting completed successfully."
+          fi
+          echo "--- End SQLFluff Output ---" >> 
 
       - name: Upload Output File as Artifact (Optional)
         uses: actions/upload-artifact@v4
