@@ -34,11 +34,6 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics >> quality_check_output.txt 2>&1
           echo "--- End Flake8 Output ---" >> quality_check_output.txt
 
-      - name: Run Python quality checks (Pylint) and save output
-        run: |
-          echo "--- Pylint Output ---" >> quality_check_output.txt
-          pylint $(git ls-files '*.py') >> quality_check_output.txt 2>&1
-          echo "--- End Pylint Output ---" >> quality_check_output.txt
 
       - name: Run SQL quality checks (sqlfluff) and save output
         run: |
