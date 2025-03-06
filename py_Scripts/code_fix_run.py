@@ -38,7 +38,7 @@ def process_sql_files(folder_path, script_path,error_file,fixed_path):
 
 # Example usage:
 folder = r"SQL_Script\" # Replace with your folder path
-script_path = r"SQL_Scripts\code_run_arg.py" # Replace with your script path
+script_path = r"py_Scripts\code_run_arg.py" # Replace with your script path
 error_file = r"SQL_scripts\SQL\errors" # Replace with your error path 
 fixed_file = r"SQL_scripts_SQL\SQL\fixed" # Replace with your fixed path
 process_sql_files(folder, script_path,error_file,fixed_file)
