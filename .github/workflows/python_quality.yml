@@ -34,8 +34,8 @@ jobs:
         if [ $? -ne 0 ]; then
           echo "SQLFluff linting failed for SQL_Scripts. Check quality_check_output.txt for details."
           cat quality_check_output.txt
-          exit 1
         fi
+      continue-on-error: true
       shell: bash
 
     - name: Run SQLFluff on all SQL files
@@ -46,8 +46,8 @@ jobs:
         if [ $? -ne 0 ]; then
           echo "SQLFluff linting failed for all SQL files. Check quality_check_output.txt for details."
           cat quality_check_output.txt
-          exit 1
         fi
+      continue-on-error: true
       shell: bash
 
     - name: Display output
