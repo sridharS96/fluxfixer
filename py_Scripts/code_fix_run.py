@@ -1,122 +1,88 @@
-import google.generativeai as genai
-import json
 import os
-import logging
 import subprocess
+import logging
 import argparse
+import configparser
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-# Initialize the Generative AI client
-try:
-    genai.configure(api_key="AIzaSyACEevcT6nND-gwFTdqoP_d54USObCbOdk")
-    model = genai.GenerativeModel("gemini-2.0-flash")
-except Exception as e:
-    logger.error(f"Error initializing Generative AI client: {e}")
-    exit()
-
-# Function to parse lint results
-def parse_lint_results(lint_results):
-    readable_output = "Linting Results:\n"
-    if not lint_results:
-        readable_output += "No linting results found.\n"
-        return readable_output
-
-    for result in lint_results:
-        if isinstance(result, dict):
-            if 'violations' in result and isinstance(result['violations'], list):
-                if not result['violations']:
-                    readable_output += " - No violations found in this section.\n"
-                else:
-                    for violation in result['violations']:
-                        if isinstance(violation, dict):
-                            line_no = violation.get('start_line_no', 'N/A')
-                            line_pos = violation.get('start_line_pos', 'N/A')
-                            description = violation.get('description', 'N/A')
-                            readable_output += f"   - Line {line_no}, Column {line_pos}: {description}\n"
-                        else:
-                            readable_output += "   - Invalid violation format.\n"
-            else:
-                readable_output += " - No violations found in this section.\n"
-        else:
-            readable_output += " - Invalid result format.\n"
-
-    return readable_output
-
-# Function to generate fixed query
-def generate_fixed_query(lint_results, original_query):
-    contents = f"""
-    Given the following SQL query and linting errors, modify the query to fix the issues:
-
-    Original Query:
-    {original_query}
-
-    Lint Errors:
-    {lint_results}
-
-    Fix the query according to the lint results and provide the fixed SQL query for bigquery without any comments or markdown code blocks , add semicolon at the end of the seprate sql query:
-    """
+def process_sql_files(changed_files, error_path, fixed_path, script_path):
     try:
-        response = model.generate_content(contents)
-        fixed_query = response.text
+        if not os.path.exists(error_path):
+            os.makedirs(error_path)
+        if not os.path.exists(fixed_path):
+            os.makedirs(fixed_path)
+
+        for filename in changed_files:
+            if filename.endswith(".sql"):
+                try:
+                    subprocess.run(["python", "-Xfrozen_modules=off", script_path, filename, error_path, fixed_path], check=True)
+                    print(f"Successfully processed: {filename}")
+
+                except subprocess.CalledProcessError as e:
+                    logger.error(f"Error processing {filename}: {e}")
+                except FileNotFoundError as e:
+                    logger.error(f"Error: Python script not found at {script_path}: {e}")
+                    return  # stop the function if the script is not found.
+                except Exception as e:
+                    logger.error(f"An unexpected error occurred while processing {filename}: {e}")
+
     except Exception as e:
-        logger.error(f"Error generating fixed query: {e}")
-        exit()
-    return fixed_query
+        logger.error(f"An unexpected error occurred: {e}")
 
-# Main function to process the script
-def main(script_name, input_path, error_path, fixed_path):
-   
-    input_file = input_path 
-    error_file = error_path + "\\"+ script_name+'.err'
-    fixed_file = fixed_path + "\\"+ script_name
-    # Read the original query from the input file
+def get_changed_sql_files_from_git_diff(local_repo):
+    print( f"Executes 'git diff --name-only' and returns a list of changed SQL files in the repository: {local_repo}")
     try:
-        with open(input_file, "r", encoding="utf-8") as file:
-            original_query = file.read()
-    except FileNotFoundError:
-        logger.error(f"Error: {script_name} ::::: {input_file} file not found.")
-        exit()
+        os.chdir(local_repo)
+        result = subprocess.run(["git", "diff", "--name-only"], capture_output=True, text=True, check=True)
+        git_diff_output = result.stdout
+        changed_files = []
+        print(f"Git diff output:\n{git_diff_output}")
+        print(f"Changed files:{changed_files}")
+        for line in git_diff_output.splitlines():
+            if line.endswith(".sql"):
+                changed_files.append(line.strip())
+        return changed_files
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Error executing git diff: {e}")
+        return []
+    except FileNotFoundError as e:
+        logger.error(f"Error: Git repository not found: {e}")
+        return []
 
-    # Run sqlfluff lint command
-    lint_command = ["sqlfluff", "lint", input_file, "--dialect=bigquery", "--format=json"]
-    lint_results = subprocess.run(lint_command, capture_output=True, text=True)
-    
-    # Ensure the directory exists before writing the error file
-    os.makedirs(os.path.dirname(error_file), exist_ok=True)
-    
-    readable_output = parse_lint_results(json.loads(lint_results.stdout))
-    # Write the lint errors to the error file
+def load_config(config_file):
+    print(f"Loading config from: {os.path.abspath(config_file)}")
     try:
-        with open(error_file, "w") as file:
-            file.write(readable_output)
-        logger.info("Errors written to file successfully.")
+        with open(config_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        #print(f"Raw config content:\n{content}")
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        #print(f"Config sections: {config.sections()}")
+        print(f"Config Parsed successfully.")
+        return config
     except Exception as e:
-        logger.error(f"Error writing errors to file: {e}")
+        print(f"Error reading config file: {e}")
+        return configparser.ConfigParser()
 
-    # Get the fixed query
-    fixed_query = generate_fixed_query(readable_output, original_query)
-
-    # Ensure the directory exists before writing the fixed query file
-    os.makedirs(os.path.dirname(fixed_file), exist_ok=True)
-
-    # Write the fixed query to the file
-    try:
-        with open(fixed_file, "w") as file:
-            file.write(fixed_query.replace("```sql", "").replace("```", "")  )
-        logger.info("Fixed query written to file successfully.")
-    except Exception as e:
-        logger.error(f"Error writing fixed query to file: {e}")
-
-# Argument parsing
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process SQL files with linting and fix queries.")
-    parser.add_argument("script_name", help="Name of the script being processed.")
-    parser.add_argument("input_path", help="Path to the input SQL file.")
-    parser.add_argument("error_path", help="Path to the output error file.")
-    parser.add_argument("fixed_path", help="Path to the output fixed SQL file.")
+def main():
+    parser = argparse.ArgumentParser(description="Process changed SQL files.")
+    parser.add_argument("--config", default="config.ini", help="Path to the configuration file.")
     args = parser.parse_args()
 
-    main(args.script_name, args.input_path, args.error_path, args.fixed_path)
+    config = load_config(args.config)
+
+    # Capture the variables from the config
+    local_repo = config.get("Paths", "local_repo")
+    script_path = config.get("Paths", "script_path")
+    error_path = config.get("Paths", "error_path")
+    fixed_path = config.get("Paths", "fixed_path")
+
+    # Pass the captured variables to the functions
+    changed_sql_files = get_changed_sql_files_from_git_diff(local_repo)
+    process_sql_files(changed_sql_files, error_path, fixed_path, script_path)
+
+if __name__ == "__main__":
+    main()
