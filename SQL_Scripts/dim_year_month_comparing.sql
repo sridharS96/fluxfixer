@@ -8,8 +8,8 @@ WITH dim_date AS (
 --Retrieve Current Date
 SELECT
     date AS date_for_reporting,
-    'Current Year' AS comparing_type,
-    date AS date_for_joining
+    'Current Year' as comparing_type
+    ,date AS date_for_joining
 FROM dim_date
 
 --Retrieve Last Year Date
