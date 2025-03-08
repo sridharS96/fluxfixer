@@ -1,32 +1,14 @@
 #FluxFixer
 
-#config.ini
-#######################################################################################################
-[Paths]
-full_check = Y
+#config.ini --> Update these to point local file directory
 
-fluff_config = <<Local_Path>>\fluxfixer\py_Scripts\sqlfluff.ini    ---> sqlfluff config
+  --> use full_check = Y to check all sql files in the folder & N for the only changed files after the repo cloned( git diff ).
+  --> linter on the full_check or changed files. error file placed in error_path. fixed filed placed in fixed_path. and linter again runs on fixed_path.
 
-local_repo = <<Local_Path>>\fluxfixer
+#sqlfluff.ini --> contion configuration of sqlfluff
 
-script_path = <<Local_Path>>\fluxfixer\py_Scripts\code_run_arg.py
+#run job in inside local repo fluxfixer\py_scripts
+  python code_fix_run.py --config=config.ini
 
-error_path = <<Local_Path>>\fluxfixer\SQl_full_test\SQL\errors
-
-fixed_path = <<Local_Path>>\fluxfixer\SQl_full_test\SQL\fixed
-
-#######################################################################################################
-
-
-#sqlfluff.ini
-#######################################################################################################
-[sqlfluff]
-dialect = BigQuery
-
-exclude_rules =  LT04, LT02, ST06
-
-max_line_length = 120
-
-templater = jinja
-
-#######################################################################################################
+  #this calls the fluxfixer\py_Scripts\code_run_arg.py with details of script_name , error_file path, fixed file path.
+  
