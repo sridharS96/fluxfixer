@@ -1,0 +1,28 @@
+{
+    "name": "John Doe",
+    "age": 30,
+    "email": "john.doe@example.com"
+    "address": {
+        "street": "123 Main St",
+        "city": "Anytown"
+        "zip": "12345"
+    },
+    "phone": "+1234567890",
+    "is_active": true,
+    "membership": null,
+    "preferences": {
+        "theme": "dark",
+        "notifications": 'true'
+        "language": "en"
+    },
+    "notes": "This is a sample JSON with errors"
+    "additional_info": {
+        "hobbies": ["reading", "traveling"],
+        "work_experience": [
+            { "company": "ABC Corp", "position": "Developer" },
+            { "company": "XYZ Ltd", "position": "Manager" },
+        ],
+        "married": false
+    },
+    "last_login": "2025-03-08T12:00:00"
+}
