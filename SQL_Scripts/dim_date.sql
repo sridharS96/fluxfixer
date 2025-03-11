@@ -1,6 +1,9 @@
 
 WITH dim_date__generate AS (
-    SELECT
+    select
+
+
+
         *
     FROM UNNEST(GENERATE_DATE_ARRAY('2010-01-01', '2030-12-31', INTERVAL 1 DAY)) AS date
 )

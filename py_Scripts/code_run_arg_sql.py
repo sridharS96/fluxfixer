@@ -4,7 +4,7 @@ import os
 import logging
 import subprocess
 import argparse
-
+import re
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,22 +55,24 @@ def generate_fixed_query(lint_results, original_query):
     Lint Errors:
     {lint_results}
 
-    lint_results = {"Files must not begin with newlines or whitespace."}
 
     Fix the query according to the lint results and provide the fixed SQL query.
-    Consider the following: 
-    1. sql must not begin with newlines or whitespace. No trailing whitespace is allowed. No tabs are allowed. Remove first empty line.
+    Consider the following:
+    1. Rename or don't use any SQL keywords like "date", "quarter", "year" for a column name change to something appropirate. 
+    1. SQL query must not begin with newlines or whitespace. No trailing whitespace is allowed. No tabs are allowed. Remove first empty line.
     2. Add exactly one empty newline character between the closing parenthesis of a CTE and the start of the next CTE. Still add the comma of the next cte at the end of the line of previous cte and then newline.
     3. Add semicolon at the end of the separate sql query in end of line. 
     4. Add comma for next columns at the end of line. 
-    5. Remove any '*' with used columns in the below queries.
+    5. Replace any '*' with used columns in the below queries unless there is no generate date array.
     6. Qualify all columns with table names.
     7. give alias to all tables and use alias in the query.
+    8. Rename any SQL keywords like "date", "quarter", "year" to something appropirate.
 
     """
     try:
         response = model.generate_content(contents)
-        fixed_query = response.text
+        match = re.search(r'```sql\n(.*?)```', response.text, re.DOTALL)
+        fixed_query = match.group(1).strip() + "\n" 
     except Exception as e:
         logger.error(f"Error generating fixed query: {e}")
         return None  # return none if there is an error
@@ -79,6 +81,7 @@ def generate_fixed_query(lint_results, original_query):
 
 # Main function to process the scripts and generate fixed queries
 def main(script_name, input_path, error_path, fixed_path,fluff_config):
+    print(f"[*]Fix Started for {input_path}")
     input_file = input_path
     error_file = os.path.join(error_path, script_name + '.err')
     fixed_file = os.path.join(fixed_path, script_name)
@@ -87,10 +90,11 @@ def main(script_name, input_path, error_path, fixed_path,fluff_config):
     try:
         with open(input_file, "r", encoding="utf-8") as file:
             original_query = file.read()
+            print(f"[*]File Available in {input_path}")
     except FileNotFoundError:
         logger.error(f"Error: {script_name} ::::: {input_file} file not found.")
         return
-
+    print(f"[*]Lint Fix Started for {input_path}")
     # Run sqlfluff lint command
     lint_command = ["sqlfluff", "lint", input_file, "--dialect=bigquery", "--format=json", f"--config={fluff_config}"]
     #print(f"Linting command: {' '.join(lint_command)}")
@@ -103,6 +107,7 @@ def main(script_name, input_path, error_path, fixed_path,fluff_config):
     os.makedirs(os.path.dirname(error_file), exist_ok=True)
 
     readable_output = parse_lint_results(json.loads(lint_results.stdout))
+    print(f"[*]Lint Errors Result Write Started for {input_path}")
     #print(readable_output)
     # Write the lint errors to the error file
     try:
@@ -111,6 +116,10 @@ def main(script_name, input_path, error_path, fixed_path,fluff_config):
         logger.info(f"Errors written to {error_file} successfully.")
     except Exception as e:
         logger.error(f"Error writing errors to {error_file}: {e}")
+    
+    print(f"[*]Lint Errors Result Write Completed for {input_path}")
+
+    print(f"[*]Processing Fix for {input_path}")
 
     # Get the fixed query
     fixed_query = generate_fixed_query(readable_output, original_query)
@@ -120,6 +129,8 @@ def main(script_name, input_path, error_path, fixed_path,fluff_config):
 
     # Ensure the directory exists before writing the fixed query file
     os.makedirs(os.path.dirname(fixed_file), exist_ok=True)
+    
+    print(f"[*]Fix Completed for {input_path}")
 
     # Write the fixed query to the file
     try:
@@ -129,19 +140,7 @@ def main(script_name, input_path, error_path, fixed_path,fluff_config):
     except Exception as e:
         logger.error(f"Error writing fixed query to {fixed_file}: {e}")
     
-    try:# Open the file in read mode
-        with open(fixed_file, "w", encoding="utf-8") as file:
-            lines = file.readlines()
-
-    # Check if the first line is just a newline and remove it
-        if lines and lines[0] == '\n':
-            lines = lines[1:]
-
-    # Write the remaining lines back to the file
-        with open(fixed_file, 'w') as file:
-            file.writelines(lines)
-    except Exception as e:
-        logger.error(f"Error writing fixed query to {fixed_file}: {e}")
+    
 
 def final_run_sqlfluff(script_name,fixed_file, fluff_config, dialect="bigquery"): #correct function definition
     print(f"Linting for file: {fixed_file}")
