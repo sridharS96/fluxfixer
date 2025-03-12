@@ -55,19 +55,20 @@ def generate_fixed_query(lint_results, original_query):
     Lint Errors:
     {lint_results}
 
-
     Fix the query according to the lint results and provide the fixed SQL query.
-    Write an optimized SQL query adhering to the following guidelines:
-    Avoid using SQL keywords like 'date,' 'quarter,' or 'year' as column names. Rename them to more appropriate alternatives.
-    Ensure the SQL query does not begin with newlines or whitespace. Remove all leading or trailing whitespace, and avoid using tabs.
-    Insert exactly one empty newline character between the closing parenthesis of a CTE (Common Table Expression) and the start of the next CTE. Keep the comma of the next CTE at the end of the previous line, followed by a newline.
-    Add a semicolon at the end of each SQL query.
-    Ensure commas for columns in SELECT statements are placed at the end of lines.
-    Replace any '*' in SELECT statements with specific column names, unless using 'GENERATE_DATE_ARRAY' or similar functions where '*' is necessary.
-    Qualify all column names with their respective table names or aliases.
-    Assign aliases to all tables and use those aliases consistently within the query.
-    Follow proper formatting and naming conventions throughout.
-    Generate an example SQL query based on these rules.
+    
+     Consider the following: 
+     1. sql must not begin with newlines or whitespace. No trailing whitespace is allowed. No tabs are allowed. Remove first empty line.
+     2. Avoid using SQL keywords like 'date,' 'quarter,' or 'year' as column names. Rename them to more appropriate alternatives.. 
+     3. SQL query must not begin with newlines or whitespace. No trailing whitespace is allowed. No tabs are allowed. Remove first empty line.
+     4. Add exactly one empty newline character between the closing parenthesis of a CTE and the start of the next CTE. Still add the comma of the next cte at the end of the line of previous cte and then newline.
+     5. Add semicolon at the end of the separate sql query in end of line. 
+     6. Add comma for next columns at the end of line. 
+     7. Replace any '*' with used columns in the below queries unless there is no generate date array.
+     8. Qualify all columns with table names.
+     9. give alias to all tables and use alias in the query.
+     10. Rename any SQL keywords like "date", "quarter", "year" to something appropirate.
+     11. Follow proper formatting and naming conventions throughout.
     """
     try:
         response = model.generate_content(contents)
